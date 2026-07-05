@@ -1,0 +1,20 @@
+(node:12740) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2026-03-28T10:29:43.759Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 13:25:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.775Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 13:50:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.778Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 14:00:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.781Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 14:25:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.784Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 14:50:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.787Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 15:00:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.791Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 15:25:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.795Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 15:50:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.801Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 16:00:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.804Z] [PID: 12740] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 16:25:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+^C

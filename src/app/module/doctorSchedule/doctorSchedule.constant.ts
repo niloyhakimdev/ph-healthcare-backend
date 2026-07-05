@@ -1,18 +1,19 @@
-import { Prisma } from "../../../generated/prisma/client"
+﻿import { Prisma } from "../../../generated/prisma/client"
 
 export const doctorScheduleSearchableFields = [
-    'id',
-    'doctorId',
+    'doctor.name',
+    'doctor.email',
     'scheduleId',
 ]
 
 export const doctorScheduleFilterableFields = [
-    'id',
     'doctorId',
     'scheduleId',
     'createdAt',
     'updatedAt',
     'isBooked',
+    'doctor.name',
+    'doctor.email',
     'schedule.startDateTime',
     'schedule.endDateTime',
 ]
@@ -22,7 +23,11 @@ export const doctorScheduleIncludeConfig : Partial<Record<keyof Prisma.DoctorSch
         include: {
             user: true,
             appointments: true,
-            specialties: true,
+            specialties: {
+                include: {
+                    specialty: true
+                }
+            },
         }
     },
     schedule: true

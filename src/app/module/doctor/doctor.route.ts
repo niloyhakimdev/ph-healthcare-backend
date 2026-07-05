@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { Role } from "../../../generated/prisma/enums";
 import { checkAuth } from "../../middleware/checkAuth";
 import { validateRequest } from "../../middleware/validateRequest";
@@ -10,8 +10,9 @@ const router = Router();
 router.get("/",
     // checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
     DoctorController.getAllDoctors);
+router.get("/:id/available-schedules", DoctorController.getDoctorAvailableSchedules);
 router.get("/:id",
-    checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+    checkAuth(Role.ADMIN, Role.SUPER_ADMIN, Role.PATIENT, Role.DOCTOR),
     DoctorController.getDoctorById);
 router.patch("/:id",
     checkAuth(Role.ADMIN, Role.SUPER_ADMIN),

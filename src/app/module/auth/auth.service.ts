@@ -1,6 +1,6 @@
 import status from "http-status";
 import { JwtPayload } from "jsonwebtoken";
-import { UserStatus } from "../../../generated/prisma/enums";
+import { Role, UserStatus } from "../../../generated/prisma/enums";
 import { envVars } from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import { IRequestUser } from "../../interfaces/requestUser.interface";
@@ -9,6 +9,26 @@ import { prisma } from "../../lib/prisma";
 import { jwtUtils } from "../../utils/jwt";
 import { tokenUtils } from "../../utils/token";
 import { IChangePasswordPayload, ILoginUserPayload, IRegisterPatientPayload } from "./auth.interface";
+
+type AuthTokenPayloadSource = {
+    id: string;
+    role: string;
+    name: string;
+    email: string;
+    status: string;
+    isDeleted: boolean;
+    emailVerified: boolean;
+}
+
+const buildAuthTokenPayload = (user: AuthTokenPayloadSource) => ({
+    userId: user.id,
+    role: user.role as Role,
+    name: user.name,
+    email: user.email,
+    status: user.status as UserStatus,
+    isDeleted: user.isDeleted,
+    emailVerified: user.emailVerified,
+});
 
 
 
@@ -46,25 +66,9 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
             return patientTx
         })
 
-        const accessToken = tokenUtils.getAccessToken({
-            userId: data.user.id,
-            role: data.user.role,
-            name: data.user.name,
-            email: data.user.email,
-            status: data.user.status,
-            isDeleted: data.user.isDeleted,
-            emailVerified: data.user.emailVerified,
-        });
+        const accessToken = tokenUtils.getAccessToken(buildAuthTokenPayload(data.user));
 
-        const refreshToken = tokenUtils.getRefreshToken({
-            userId: data.user.id,
-            role: data.user.role,
-            name: data.user.name,
-            email: data.user.email,
-            status: data.user.status,
-            isDeleted: data.user.isDeleted,
-            emailVerified: data.user.emailVerified,
-        });
+        const refreshToken = tokenUtils.getRefreshToken(buildAuthTokenPayload(data.user));
 
         return {
             ...data,
@@ -104,25 +108,9 @@ const loginUser = async (payload: ILoginUserPayload) => {
         throw new AppError(status.NOT_FOUND, "User is deleted");
     }
 
-    const accessToken = tokenUtils.getAccessToken({
-        userId: data.user.id,
-        role: data.user.role,
-        name: data.user.name,
-        email: data.user.email,
-        status: data.user.status,
-        isDeleted: data.user.isDeleted,
-        emailVerified: data.user.emailVerified,
-    });
+    const accessToken = tokenUtils.getAccessToken(buildAuthTokenPayload(data.user));
 
-    const refreshToken = tokenUtils.getRefreshToken({
-        userId: data.user.id,
-        role: data.user.role,
-        name: data.user.name,
-        email: data.user.email,
-        status: data.user.status,
-        isDeleted: data.user.isDeleted,
-        emailVerified: data.user.emailVerified,
-    });
+    const refreshToken = tokenUtils.getRefreshToken(buildAuthTokenPayload(data.user));
 
     return {
         ...data,
@@ -166,19 +154,9 @@ const getMe = async (user : IRequestUser) => {
     return isUserExists;
 }
 
-const getNewToken = async (refreshToken : string, sessionToken : string) => {
-
-    const isSessionTokenExists = await prisma.session.findUnique({
-        where : {
-            token : sessionToken,
-        },
-        include : {
-            user : true,
-        }
-    })
-
-    if(!isSessionTokenExists){
-        throw new AppError(status.UNAUTHORIZED, "Invalid session token");
+const getNewToken = async (refreshToken : string, sessionToken?: string) => {
+    if (!refreshToken) {
+        throw new AppError(status.UNAUTHORIZED, "Refresh token is missing");
     }
 
     const verifiedRefreshToken = jwtUtils.verifyToken(refreshToken, envVars.REFRESH_TOKEN_SECRET)
@@ -188,43 +166,67 @@ const getNewToken = async (refreshToken : string, sessionToken : string) => {
         throw new AppError(status.UNAUTHORIZED, "Invalid refresh token");
     }
 
-    const data = verifiedRefreshToken.data as JwtPayload;
+    if (sessionToken) {
+        const isSessionTokenExists = await prisma.session.findUnique({
+            where : {
+                token : sessionToken,
+            },
+            include : {
+                user : true,
+            }
+        })
 
-    const newAccessToken = tokenUtils.getAccessToken({
-        userId: data.userId,
-        role: data.role,
-        name: data.name,
-        email: data.email,
-        status: data.status,
-        isDeleted: data.isDeleted,
-        emailVerified: data.emailVerified,
-    });
-
-    const newRefreshToken = tokenUtils.getRefreshToken({
-        userId: data.userId,
-        role: data.role,
-        name: data.name,
-        email: data.email,
-        status: data.status,
-        isDeleted: data.isDeleted,
-        emailVerified: data.emailVerified,
-    });
-
-    const {token} = await prisma.session.update({
-        where : {
-            token : sessionToken
-        },
-        data : {
-            token : sessionToken,
-            expiresAt: new Date(Date.now() + 60 * 60 * 60 * 24 * 1000),
-            updatedAt: new Date(),
+        if(!isSessionTokenExists){
+            throw new AppError(status.UNAUTHORIZED, "Invalid session token");
         }
-    })
+    }
+
+    const data = verifiedRefreshToken.data as JwtPayload;
+    const userId = data.userId as string | undefined;
+
+    if (!userId) {
+        throw new AppError(status.UNAUTHORIZED, "Invalid refresh token");
+    }
+
+    const currentUser = await prisma.user.findUnique({
+        where: {
+            id: userId,
+        }
+    });
+
+    if (!currentUser) {
+        throw new AppError(status.NOT_FOUND, "User not found");
+    }
+
+    if (currentUser.status === UserStatus.BLOCKED || currentUser.status === UserStatus.DELETED || currentUser.isDeleted) {
+        throw new AppError(status.UNAUTHORIZED, "Unauthorized access! User is not active.");
+    }
+
+    const newAccessToken = tokenUtils.getAccessToken(buildAuthTokenPayload(currentUser));
+
+    const newRefreshToken = tokenUtils.getRefreshToken(buildAuthTokenPayload(currentUser));
+
+    let updatedSessionToken = sessionToken;
+
+    if (sessionToken) {
+        const {token} = await prisma.session.update({
+            where : {
+                token : sessionToken
+            },
+            data : {
+                token : sessionToken,
+                expiresAt: new Date(Date.now() + 60 * 60 * 60 * 24 * 1000),
+                updatedAt: new Date(),
+            }
+        })
+
+        updatedSessionToken = token;
+    }
 
     return {
         accessToken : newAccessToken,
         refreshToken : newRefreshToken,
-        sessionToken : token,
+        sessionToken : updatedSessionToken,
     }
 
 }
@@ -264,25 +266,9 @@ const changePassword = async (payload : IChangePasswordPayload, sessionToken : s
         })
     }
 
-    const accessToken = tokenUtils.getAccessToken({
-        userId: session.user.id,
-        role: session.user.role,
-        name: session.user.name,
-        email: session.user.email,
-        status: session.user.status,
-        isDeleted: session.user.isDeleted,
-        emailVerified: session.user.emailVerified,
-    });
+    const accessToken = tokenUtils.getAccessToken(buildAuthTokenPayload(session.user));
 
-    const refreshToken = tokenUtils.getRefreshToken({
-        userId: session.user.id,
-        role: session.user.role,
-        name: session.user.name,
-        email: session.user.email,
-        status: session.user.status,
-        isDeleted: session.user.isDeleted,
-        emailVerified: session.user.emailVerified,
-    });
+    const refreshToken = tokenUtils.getRefreshToken(buildAuthTokenPayload(session.user));
     
 
     return {
@@ -293,6 +279,10 @@ const changePassword = async (payload : IChangePasswordPayload, sessionToken : s
 }
 
 const logoutUser = async (sessionToken : string) => {
+    if (!sessionToken) {
+        return { success: true };
+    }
+
     const result = await auth.api.signOut({
         headers : new Headers({
             Authorization : `Bearer ${sessionToken}`
@@ -413,17 +403,9 @@ const googleLoginSuccess = async (session : Record<string, any>) =>{
         })
     }
 
-    const accessToken = tokenUtils.getAccessToken({
-        userId: session.user.id,
-        role: session.user.role,
-        name: session.user.name,
-    });
+    const accessToken = tokenUtils.getAccessToken(buildAuthTokenPayload(session.user));
 
-    const refreshToken = tokenUtils.getRefreshToken({
-        userId: session.user.id,
-        role: session.user.role,
-        name: session.user.name,
-    });
+    const refreshToken = tokenUtils.getRefreshToken(buildAuthTokenPayload(session.user));
 
     return {
         accessToken,

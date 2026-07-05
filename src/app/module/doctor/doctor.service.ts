@@ -1,32 +1,71 @@
-import status from "http-status";
-import { Doctor, Prisma } from "../../../generated/prisma/client";
-import { UserStatus } from "../../../generated/prisma/enums";
+﻿import status from "http-status";
+import { Doctor, DoctorSchedules, Prisma } from "../../../generated/prisma/client";
+import { Role, UserStatus } from "../../../generated/prisma/enums";
 import AppError from "../../errorHelpers/AppError";
 import { IQueryParams } from "../../interfaces/query.interface";
+import { IRequestUser } from "../../interfaces/requestUser.interface";
 import { prisma } from "../../lib/prisma";
 import { QueryBuilder } from "../../utils/QueryBuilder";
+import { doctorScheduleFilterableFields, doctorScheduleIncludeConfig, doctorScheduleSearchableFields } from "../doctorSchedule/doctorSchedule.constant";
 import { doctorFilterableFields, doctorIncludeConfig, doctorSearchableFields } from "./doctor.constant";
 import { IUpdateDoctorPayload } from "./doctor.interface";
 
+const doctorPublicProfileInclude: Prisma.DoctorInclude = {
+    user: true,
+    specialties: {
+        include: {
+            specialty: true
+        }
+    },
+    doctorSchedules: {
+        where: {
+            isBooked: false
+        },
+        include: {
+            schedule: true
+        }
+    },
+    reviews: true
+};
+
+const doctorAdminDetailsInclude: Prisma.DoctorInclude = {
+    user: true,
+    specialties: {
+        include: {
+            specialty: true
+        }
+    },
+    appointments: {
+        include: {
+            patient: true,
+            schedule: true,
+            prescription: true,
+        }
+    },
+    doctorSchedules: {
+        include: {
+            schedule: true,
+        }
+    },
+    reviews: true
+};
+
+const doctorAvailableSchedulesInclude: Prisma.DoctorSchedulesInclude = {
+    schedule: true,
+    doctor: {
+        include: {
+            user: true,
+            specialties: {
+                include: {
+                    specialty: true
+                }
+            }
+        }
+    }
+};
+
 // /doctors?specialty=cardiology&include=doctorSchedules,appointments
 const getAllDoctors = async (query : IQueryParams) => {
-    // const doctors = await prisma.doctor.findMany({
-    //     where: {
-    //         isDeleted: false,
-    //     },
-    //     include: {
-    //         user: true,
-    //         specialties: {
-    //             include: {
-    //                 specialty: true
-    //             }
-    //         }
-    //     }
-    // })
-
-    // // const query = new QueryBuilder().paginate().search().filter();
-    // return doctors;
-
     const queryBuilder = new QueryBuilder<Doctor, Prisma.DoctorWhereInput, Prisma.DoctorInclude>(
         prisma.doctor,
         query,
@@ -44,7 +83,6 @@ const getAllDoctors = async (query : IQueryParams) => {
         })
         .include({
             user: true,
-            // specialties: true,
             specialties: {
                 include:{
                     specialty: true
@@ -61,33 +99,63 @@ const getAllDoctors = async (query : IQueryParams) => {
     return result;
 }
 
-const getDoctorById = async (id: string) => {
-    const doctor = await prisma.doctor.findUnique({
+const getDoctorAvailableSchedules = async (id: string, query: IQueryParams) => {
+    const doctor = await prisma.doctor.findFirst({
         where: {
             id,
             isDeleted: false,
         },
-        include: {
-            user: true,
-            specialties: {
-                include: {
-                    specialty: true
-                }
-            },
-            appointments: {
-                include: {
-                    patient: true,
-                    schedule: true,
-                    prescription: true,
-                }
-            },
-            doctorSchedules: {
-                include: {
-                    schedule: true,
-                }
-            },
-            reviews: true
+        select: {
+            id: true,
         }
+    });
+
+    if (!doctor) {
+        throw new AppError(status.NOT_FOUND, "Doctor not found");
+    }
+
+    const queryBuilder = new QueryBuilder<DoctorSchedules, Prisma.DoctorSchedulesWhereInput, Prisma.DoctorSchedulesInclude>(
+        prisma.doctorSchedules,
+        query,
+        {
+            searchableFields: doctorScheduleSearchableFields,
+            filterableFields: doctorScheduleFilterableFields,
+        }
+    );
+
+    const result = await queryBuilder
+        .search()
+        .filter()
+        .where({
+            doctorId: id,
+            isBooked: false,
+            schedule: {
+                startDateTime: {
+                    gte: new Date()
+                }
+            }
+        })
+        .paginate()
+        .include(doctorAvailableSchedulesInclude)
+        .sort()
+        .fields()
+        .dynamicInclude(doctorScheduleIncludeConfig)
+        .execute();
+
+    return result;
+}
+
+const getDoctorById = async (id: string, user?: IRequestUser) => {
+    const include = user && (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN)
+        ? doctorAdminDetailsInclude
+        : doctorPublicProfileInclude;
+
+    const doctor = await prisma.doctor.findFirst({
+        where: {
+            id,
+            isDeleted: false,
+        },
+        include
     })
     return doctor;
 }
@@ -178,7 +246,7 @@ const deleteDoctor = async (id: string) => {
             data: {
                 isDeleted: true,
                 deletedAt: new Date(),
-                status: UserStatus.DELETED // Optional: you may also want to block the user
+                status: UserStatus.DELETED
             },
         })
 
@@ -196,6 +264,7 @@ const deleteDoctor = async (id: string) => {
 
 export const DoctorService = {
     getAllDoctors,
+    getDoctorAvailableSchedules,
     getDoctorById,
     updateDoctor,
     deleteDoctor,

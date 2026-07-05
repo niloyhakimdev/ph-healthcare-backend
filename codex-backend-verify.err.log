@@ -1,0 +1,39 @@
+C:\Doctor-portal\L2B6-Backend-PH-Healthcare-Management-System\node_modules\.pnpm\@prisma+client@7.6.0_prisma_889fd3be5ec8852f6f4d66c586359f50\node_modules\@prisma\param-graph\src\serialization.ts:305
+    const bytes = decodeBase64url(serialized.graph)
+                                             ^
+
+TypeError: Cannot read properties of undefined (reading 'graph')
+    at new ni (C:\Doctor-portal\L2B6-Backend-PH-Healthcare-Management-System\node_modules\.pnpm\@prisma+client@7.6.0_prisma_889fd3be5ec8852f6f4d66c586359f50\node_modules\@prisma\param-graph\src\serialization.ts:305:46)
+    at deserializeParamGraph (C:\Doctor-portal\L2B6-Backend-PH-Healthcare-Management-System\node_modules\.pnpm\@prisma+client@7.6.0_prisma_889fd3be5ec8852f6f4d66c586359f50\node_modules\@prisma\param-graph\src\serialization.ts:127:10)
+    at Function.deserialize (C:\Doctor-portal\L2B6-Backend-PH-Healthcare-Management-System\node_modules\.pnpm\@prisma+client@7.6.0_prisma_889fd3be5ec8852f6f4d66c586359f50\node_modules\@prisma\param-graph\src\param-graph.ts:91:18)
+    at new jt (C:\Doctor-portal\L2B6-Backend-PH-Healthcare-Management-System\node_modules\.pnpm\@prisma+client@7.6.0_prisma_889fd3be5ec8852f6f4d66c586359f50\node_modules\@prisma\client\src\runtime\core\engines\client\ClientEngine.ts:144:35)
+    at getEngineInstance (C:\Doctor-portal\L2B6-Backend-PH-Healthcare-Management-System\node_modules\.pnpm\@prisma+client@7.6.0_prisma_889fd3be5ec8852f6f4d66c586359f50\node_modules\@prisma\client\src\runtime\core\init\getEngineInstance.ts:7:10)
+    at new t (C:\Doctor-portal\L2B6-Backend-PH-Healthcare-Management-System\node_modules\.pnpm\@prisma+client@7.6.0_prisma_889fd3be5ec8852f6f4d66c586359f50\node_modules\@prisma\client\src\runtime\getPrismaClient.ts:457:24)
+    at <anonymous> (C:\Doctor-portal\L2B6-Backend-PH-Healthcare-Management-System\src\app\lib\prisma.ts:10:16)
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:665:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  clientVersion: '7.3.0'
+}
+
+Node.js v22.21.1
+(node:13508) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2026-03-28T10:29:43.746Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 13:25:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.761Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 13:50:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.776Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 14:00:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.779Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 14:25:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.781Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 14:50:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.787Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 15:00:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.791Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 15:25:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.795Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 15:50:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.799Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 16:00:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+[2026-03-28T10:29:43.802Z] [PID: 13508] [32m[NODE-CRON][32m [33m[WARN][0m missed execution at Sat Mar 28 2026 16:25:00 GMT+0600 (Bangladesh Standard Time)! Possible blocking IO or high CPU user at the same process used by node-cron.
+^C

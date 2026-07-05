@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+﻿import { Request, Response } from "express";
 import status from "http-status";
 import { IQueryParams } from "../../interfaces/query.interface";
 import { catchAsync } from "../../shared/catchAsync";
@@ -21,11 +21,29 @@ const getAllDoctors = catchAsync(
     }
 )
 
+const getDoctorAvailableSchedules = catchAsync(
+    async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const query = req.query;
+
+        const result = await DoctorService.getDoctorAvailableSchedules(id as string, query as IQueryParams);
+
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Doctor available schedules fetched successfully",
+            data: result.data,
+            meta: result.meta,
+        })
+    }
+)
+
 const getDoctorById = catchAsync(
     async (req: Request, res: Response) => {
         const { id } = req.params;
+        const user = req.user;
 
-        const doctor = await DoctorService.getDoctorById(id as string);
+        const doctor = await DoctorService.getDoctorById(id as string, user);
 
         sendResponse(res, {
             httpStatusCode: status.OK,
@@ -69,6 +87,7 @@ const deleteDoctor = catchAsync(
 
 export const DoctorController = {
     getAllDoctors,
+    getDoctorAvailableSchedules,
     getDoctorById,
     updateDoctor,
     deleteDoctor,

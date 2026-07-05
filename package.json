@@ -7,6 +7,8 @@
     "start": "node dist/server.js",
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
+    "seed:doctors": "tsx src/scripts/seedDoctors.ts",
+    "seed:doctor-schedules": "tsx src/scripts/seedAvailableDoctorSchedules.ts",
     "lint": "eslint ./src/**/*",
     "migrate": "prisma migrate dev",
     "generate": "prisma generate",

@@ -1,9 +1,11 @@
-import { Request, Response } from "express";
+﻿import { Request, Response } from "express";
 import status from "http-status";
+import AppError from "../../errorHelpers/AppError";
 import { IQueryParams } from "../../interfaces/query.interface";
 import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
 import { DoctorScheduleService } from "./doctorSchedule.service";
+import { IRequestUser } from "../../interfaces/requestUser.interface";
 
 const createMyDoctorSchedule = catchAsync( async (req : Request, res : Response) => {
     const payload = req.body;
@@ -18,13 +20,32 @@ const createMyDoctorSchedule = catchAsync( async (req : Request, res : Response)
 });
 
 const getMyDoctorSchedules = catchAsync(async (req: Request, res: Response) => {
-    const user = req.user;
+    const user = req.user as IRequestUser;
+
+    if (!user?.userId) {
+        throw new AppError(status.UNAUTHORIZED, "Unauthorized: user information is missing.");
+    }
+
     const query = req.query;
     const result = await DoctorScheduleService.getMyDoctorSchedules(user, query as IQueryParams);
+
     sendResponse(res, {
         success: true,
         httpStatusCode: status.OK,
         message: 'Doctor schedules retrieved successfully',
+        data: result.data,
+        meta: result.meta
+    });
+});
+
+const getAvailableDoctorSchedules = catchAsync(async (req: Request, res: Response) => {
+    const query = req.query;
+    const result = await DoctorScheduleService.getAvailableDoctorSchedules(query as IQueryParams);
+
+    sendResponse(res, {
+        success: true,
+        httpStatusCode: status.OK,
+        message: 'Available doctor schedules retrieved successfully',
         data: result.data,
         meta: result.meta
     });
@@ -60,7 +81,7 @@ const updateMyDoctorSchedule = catchAsync( async (req : Request, res : Response)
     const updatedDoctorSchedule = await DoctorScheduleService.updateMyDoctorSchedule(user, payload);
     sendResponse(res, {
         success: true,
-        httpStatusCode: status.OK,  
+        httpStatusCode: status.OK,
         message: 'Doctor schedule updated successfully',
         data: updatedDoctorSchedule
     });
@@ -81,6 +102,7 @@ const deleteMyDoctorSchedule = catchAsync(async (req: Request, res: Response) =>
 export const DoctorScheduleController = {
     createMyDoctorSchedule,
     getMyDoctorSchedules,
+    getAvailableDoctorSchedules,
     getAllDoctorSchedules,
     getDoctorScheduleById,
     updateMyDoctorSchedule,

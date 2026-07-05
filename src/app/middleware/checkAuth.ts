@@ -13,10 +13,6 @@ export const checkAuth = (...authRoles: Role[]) => async (req: Request, res: Res
         //Session Token Verification
         const sessionToken = CookieUtils.getCookie(req, "better-auth.session_token");
 
-        if (!sessionToken) {
-            throw new Error('Unauthorized access! No session token provided.');
-        }
-
         if (sessionToken) {
             const sessionExists = await prisma.session.findFirst({
                 where: {
@@ -66,15 +62,9 @@ export const checkAuth = (...authRoles: Role[]) => async (req: Request, res: Res
                     role : user.role,
                     email : user.email,
                 }
+
+                return next();
             }
-
-            const accessToken = CookieUtils.getCookie(req, 'accessToken');
-
-            if (!accessToken) {
-                throw new AppError(status.UNAUTHORIZED, 'Unauthorized access! No access token provided.');
-            }
-
-
         }
 
         //Access Token Verification
@@ -92,6 +82,33 @@ export const checkAuth = (...authRoles: Role[]) => async (req: Request, res: Res
 
         if (authRoles.length > 0 && !authRoles.includes(verifiedToken.data!.role as Role)) {
             throw new AppError(status.FORBIDDEN, 'Forbidden access! You do not have permission to access this resource.');
+        }
+
+        let email = verifiedToken.data!.email as string | undefined;
+
+        if (!email) {
+            const currentUser = await prisma.user.findUnique({
+                where: {
+                    id: verifiedToken.data!.userId as string,
+                },
+                select: {
+                    email: true,
+                    status: true,
+                    isDeleted: true,
+                }
+            })
+
+            if (!currentUser || currentUser.status === UserStatus.BLOCKED || currentUser.status === UserStatus.DELETED || currentUser.isDeleted) {
+                throw new AppError(status.UNAUTHORIZED, 'Unauthorized access! User is not active.');
+            }
+
+            email = currentUser.email;
+        }
+
+        req.user = {
+            userId: verifiedToken.data!.userId as string,
+            role: verifiedToken.data!.role as Role,
+            email,
         }
 
         next()

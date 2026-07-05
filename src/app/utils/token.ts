@@ -4,6 +4,13 @@ import { envVars } from "../config/env";
 import { CookieUtils } from "./cookie";
 import { jwtUtils } from "./jwt";
 
+const isProduction = envVars.NODE_ENV === "production";
+const authCookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    path: '/',
+} as const;
 
 //Creating access token
 const getAccessToken = (payload: JwtPayload) => {
@@ -28,10 +35,7 @@ const getRefreshToken = (payload: JwtPayload) => {
 
 const setAccessTokenCookie = (res: Response, token: string) => {
     CookieUtils.setCookie(res, 'accessToken', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: '/',
+        ...authCookieOptions,
         //1 day
         maxAge: 60 * 60 * 24 * 1000,
     });
@@ -39,10 +43,7 @@ const setAccessTokenCookie = (res: Response, token: string) => {
 
 const setRefreshTokenCookie = (res: Response, token: string) => {
     CookieUtils.setCookie(res, 'refreshToken', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: '/',
+        ...authCookieOptions,
         //7d
         maxAge: 60 * 60 * 24 * 1000 * 7,
     });
@@ -50,13 +51,22 @@ const setRefreshTokenCookie = (res: Response, token: string) => {
 
 const setBetterAuthSessionCookie = (res: Response, token: string) => {
     CookieUtils.setCookie(res, "better-auth.session_token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        path: '/',
+        ...authCookieOptions,
         //1 day
         maxAge: 60 * 60 * 24 * 1000,
     });
+}
+
+const clearAccessTokenCookie = (res: Response) => {
+    CookieUtils.clearCookie(res, "accessToken", authCookieOptions);
+}
+
+const clearRefreshTokenCookie = (res: Response) => {
+    CookieUtils.clearCookie(res, "refreshToken", authCookieOptions);
+}
+
+const clearBetterAuthSessionCookie = (res: Response) => {
+    CookieUtils.clearCookie(res, "better-auth.session_token", authCookieOptions);
 }
 
 
@@ -67,4 +77,7 @@ export const tokenUtils = {
     setAccessTokenCookie,
     setRefreshTokenCookie,
     setBetterAuthSessionCookie,
+    clearAccessTokenCookie,
+    clearRefreshTokenCookie,
+    clearBetterAuthSessionCookie,
 }
